@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH --job-name={{ job_name }}
+#SBATCH --partition={{ partition }}
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task={{ cpus_per_task }}
+#SBATCH {{ mem_option }}
+#SBATCH --gres={{ gres }}
+#SBATCH --time={{ time }}
+#SBATCH --output={{ log_path }}/%j_{{ job_name }}.out
+{% if constraint %}
+#SBATCH --constraint={{ constraint }}
+{% endif %}
+{% if exclude %}
+#SBATCH --exclude={{ exclude }}
+{% endif %}
+{% if mail_type %}
+#SBATCH --mail-type={{ mail_type }}
+#SBATCH --mail-user={{ mail_user }}
+{% endif %}
+
+scontrol show job $SLURM_JOB_ID
+
+{% for cmd in setup_commands %}
+{{ cmd }}
+{% endfor %}
+
+{{ run_command }}
