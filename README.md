@@ -43,3 +43,10 @@ For local mode:
 ```
 python submit.py --mode local --job_name experiment --python_script run.py --python_arguments "--param=1.0"
 ```
+## Building singularity container
+# Set cache and tmp directories for the Singularity build - (not optimal)
+export SINGULARITY_CACHEDIR="/scratch_local/$USER-$SLURM_JOBID"
+export SINGULARITY_TMPDIR="/scratch_local/$USER-$SLURM_JOBID"
+
+# Build the singularity container
+singularity build --fakeroot --force --bind /mnt:/mnt --nv python.sif Singularity
