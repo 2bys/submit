@@ -1,28 +1,19 @@
 #!/bin/bash
 #SBATCH --job-name={{ job_name }}
-#SBATCH --partition={{ partition }}
+#SBATCH --partition=2080-galvani
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task={{ cpus_per_task }}
-#SBATCH {{ mem_option }}
-#SBATCH --gres={{ gres }}
-#SBATCH --time={{ time }}
-#SBATCH --output={{ log_path }}/%j_{{ job_name }}.out
-{% if constraint %}
-#SBATCH --constraint={{ constraint }}
-{% endif %}
-{% if exclude %}
-#SBATCH --exclude={{ exclude }}
-{% endif %}
-{% if mail_type %}
-#SBATCH --mail-type={{ mail_type }}
-#SBATCH --mail-user={{ mail_user }}
-{% endif %}
+#SBATCH --cpus-per-task=12
+#SBATCH --mem-per-cpu=4G
+#SBATCH --gres=gpu:1
+#SBATCH --time=3-00:00:00
+#SBATCH --output=logs/%x_%j.out
 
 scontrol show job $SLURM_JOB_ID
 
-{% for cmd in setup_commands %}
-{{ cmd }}
-{% endfor %}
+export TMPDIR=$WORK/tmp
+export CACHEDIR=$WORK/cache
 
-{{ run_command }}
+echo {{script_path}}
+
+{{ pykernel }} 'python {{ script_path}}{% for k,v in script_args.items() %} --{{k}} {{v}} {% endfor %}'
