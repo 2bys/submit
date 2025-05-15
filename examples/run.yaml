@@ -1,0 +1,12 @@
+mode:
+  slurm: 
+    pykernel: "singularity exec --bind /mnt:/mnt python.sif bash -c"
+    template: "./submit/templates/slurm_job.sh.j2"
+  local: 
+    pykernel: "python"
+    template: "./submit/templates/local_job_cmd.j2"
+
+scripts:
+  regression: 
+    path: "examples/ex_regression.py"
+
