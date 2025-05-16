@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name={{ job_name }}
-#SBATCH --partition={% set partition = partition or "2080-galvani" -%}
-#SBATCH --nodes={% set nodes = nodes or 1 -%}
-#SBATCH --ntasks={% set ntasks = ntasks or 1 -%}
-#SBATCH --cpus-per-task={% set cpus_per_task = cpus_per_task or 12 -%}
-#SBATCH --mem-per-cpu={% set mem_per_cpu = mem_per_cpu or 4G -%}
-#SBATCH --gres={% set gres = gres or "gpu:1" -%}
-#SBATCH --time={% set time = time or "3-00:00:00" -%}
-#SBATCH --output=logs/%x_%j.out
+#SBATCH --partition={{ partition  | default("2080-galvani") }}
+#SBATCH --nodes={{ nodes          | default(1)            }}
+#SBATCH --ntasks={{ ntasks        | default(1)            }}
+#SBATCH --cpus-per-task={{ cpus_per_task | default(12)     }}
+#SBATCH --mem-per-cpu={{ mem_per_cpu  | default("4G")       }}
+#SBATCH --gres={{ gres             | default("gpu:1")     }}
+#SBATCH --time={{ time_limit      | default("3-00:00:00")}}
+#SBATCH --output={{ slurm_log_dir  | default("logs") }}/%x_%j.out
 
 scontrol show job $SLURM_JOB_ID
 
