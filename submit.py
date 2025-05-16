@@ -197,6 +197,7 @@ def main() -> None:
     parser.add_argument("--mem-per-cpu", type=str, help="Memory per CPU (e.g. 4G)")
     parser.add_argument("--gres", type=str, help="Generic resources (e.g. gpu:1)")
     parser.add_argument("--time", type=str, help="Time limit (e.g. 3-00:00:00)")
+    parser.add_argument("--slurm_log_dir", type=str, default="./logs", help="Log directory for slurm job.")
 
     # Split off any --key value1 value2 ... into `unknown`
     args, unknown = parser.parse_known_args()
@@ -213,7 +214,7 @@ def main() -> None:
             "mem_per_cpu": args.mem_per_cpu,
             "gres": args.gres,
             "time_limit": args.time,
-            "log_dir": args.log_dir
+            "slurm_log_dir": args.slurm_log_dir
         }
     else:
         mode_specific_overrides = {}
@@ -223,7 +224,7 @@ def main() -> None:
         config = yaml.safe_load(f)
 
     # Grab the right mode-block
-    mode_cfg = config["mode"][args.mode]
+    mode_cfg = config["mode"][args.mode.value]
     pykernel = mode_cfg["pykernel"]
     template_fp = Path(mode_cfg["template"])
 
@@ -259,7 +260,7 @@ def main() -> None:
 
     for combo in product(*all_values):
         # combo is a tuple like ("value1_for_key1", "value_for_key2", ...)
-        combo_dict = dict(zip(keys, combo, strict=True))
+        combo_dict = dict(zip(keys, combo))
 
         # Prepare the vars that go into Jinja
         template_vars = {
