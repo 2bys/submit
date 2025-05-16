@@ -2,5 +2,6 @@ Bootstrap: docker
 From: python:3.12
 
 %post
-	cd /mnt/lustre/work/hennig/hmx547/repos/laplax
-	python -m pip install --root-user-action=ignore -e ."[dev, notebooks]"
+	cd /path/to/repo
+	python -m pip install --root-user-action=ignore -e .
+

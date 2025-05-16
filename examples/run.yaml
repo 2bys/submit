@@ -8,5 +8,6 @@ mode:
 
 scripts:
   regression: 
-    path: "examples/ex_regression.py"
-
+    path: "./path/to/script.py"
+    default_args: 
+      - learning_rate: [1., 2.]

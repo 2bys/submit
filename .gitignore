@@ -1,3 +1,9 @@
+# submit-specific files
+# all example files outside of examples/
+run.yaml 
+Singularity.def
+.env
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
