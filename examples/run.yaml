@@ -1,7 +1,10 @@
 mode:
   slurm: 
-    pykernel: "singularity exec --bind /mnt:/mnt python.sif bash -c"
+    pykernel: "singularity exec --bind /mnt:/mnt --nv python.sif bash -c"
     template: "./submit/templates/slurm_job.sh.j2"
+  cloud_local: 
+    pykernel: "singularity exec --bind /mnt:/mnt --nv python.sif bash -c"
+    template: "./submit/templates/cloud_local_job_cmd.j2"
   local: 
     pykernel: "python"
     template: "./submit/templates/local_job_cmd.j2"

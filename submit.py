@@ -16,6 +16,7 @@ class ExecutionMode(Enum):
     """Enumeration of supported job execution modes."""
     SLURM = "slurm"
     LOCAL = "local"
+    CLOUD_LOCAL = "cloud_local"
 
     @classmethod
     def from_str(cls, value: str) -> "ExecutionMode":
@@ -95,7 +96,7 @@ class LocalJob:
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                text=True,
+                universal_newlines=True,
                 bufsize=1,
             )
             while True:
@@ -158,6 +159,7 @@ class SlurmJob:
 JOB_OPTIONS = {
     ExecutionMode.LOCAL: LocalJob,
     ExecutionMode.SLURM: SlurmJob,
+    ExecutionMode.CLOUD_LOCAL: LocalJob
 }
 
 
