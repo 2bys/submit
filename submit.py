@@ -162,6 +162,10 @@ JOB_OPTIONS = {
     ExecutionMode.CLOUD_LOCAL: LocalJob
 }
 
+def arg_to_string(val):
+    """Turn argument to string without backslash"""
+    return str(val).replace("/", "-")
+
 
 def main() -> None:
     """Main entry point for job submission.
@@ -277,7 +281,7 @@ def main() -> None:
         )
 
         # instantiate and submit
-        suffix = "_".join(f"{k}={v}" for k,v in combo_dict.items())
+        suffix = "_".join(f"{arg_to_string(k)}={arg_to_string(v)}" for k,v in combo_dict.items())
         name = args.script if not suffix else f"{args.script}_{suffix}"
 
         job = JOB_OPTIONS[args.mode](
