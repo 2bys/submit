@@ -344,8 +344,6 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
             result = subprocess.run(
                 ["bash", str(build_script)],
                 cwd=self.repo_root,
-                capture_output=False,  # Show output in real-time
-                text=True,
             )
 
             if result.returncode == 0:
@@ -408,7 +406,7 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
             # In non-interactive mode, try to build if Singularity is available
             try:
                 subprocess.run(
-                    ["singularity", "--version"], capture_output=True, check=True
+                    ["singularity", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
                 )
                 self.log("Singularity detected. Building container automatically...")
                 build_container = True
