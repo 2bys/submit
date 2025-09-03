@@ -24,17 +24,25 @@ import yaml
 class SubmitInitializer:
     """Handles the initialization and setup of the submit tool."""
 
-    def __init__(self, repo_root: Path, interactive: bool = True, force: bool = False):
+    def __init__(
+        self,
+        repo_root: Path,
+        interactive: bool = True,
+        force: bool = False,
+        verbose: bool = False,
+    ):
         """Initialize the setup handler.
 
         Args:
             repo_root: Root directory of the Python repository
             interactive: Whether to prompt for user input
             force: Whether to overwrite existing files
+            verbose: Whether to enable verbose logging
         """
         self.repo_root = repo_root
         self.interactive = interactive
         self.force = force
+        self.verbose = verbose
         self.submit_dir = repo_root / "submit"
 
         # Validate that we're in a submit directory
@@ -62,6 +70,11 @@ class SubmitInitializer:
         """Log a message with appropriate formatting."""
         prefix = f"[{level}]" if level != "INFO" else ""
         print(f"{prefix} {message}")
+
+    def verbose_log(self, message: str):
+        """Log a verbose message only if verbose mode is enabled."""
+        if self.verbose:
+            self.log(message, "DEBUG")
 
     def prompt_yes_no(self, question: str, default: bool = True) -> bool:
         """Prompt user for yes/no input."""
@@ -164,14 +177,25 @@ From: python:{python_version}
 
         # Look for all scripts directories anywhere in the repo
         scripts_pattern = "**/scripts/*.py"
+        self.verbose_log(f"Searching for scripts with pattern: {scripts_pattern}")
+        self.verbose_log(f"Repository root: {self.repo_root}")
+        self.verbose_log(f"Submit directory: {self.submit_dir}")
+
         for script_file in self.repo_root.glob(scripts_pattern):
+            self.verbose_log(f"Found potential script: {script_file}")
+            self.verbose_log(f"  - Is __init__.py? {script_file.name == '__init__.py'}")
+            self.verbose_log(
+                f"  - Is in submit dir? {self._is_relative_to(script_file, self.submit_dir)}"
+            )
             if script_file.name != "__init__.py" and not self._is_relative_to(
                 script_file, self.submit_dir
             ):
                 script_name = script_file.stem
-                discovered_scripts.append(
-                    (script_name, script_file.relative_to(self.repo_root))
-                )
+                relative_path = script_file.relative_to(self.repo_root)
+                self.verbose_log(f"  - Added script: {script_name} -> {relative_path}")
+                discovered_scripts.append((script_name, relative_path))
+            else:
+                self.verbose_log(f"  - Skipped: {script_file.name}")
 
         # In interactive mode, ask user to add additional scripts
         if self.interactive:
@@ -224,6 +248,7 @@ From: python:{python_version}
                 discovered_scripts.append((custom_name, script_path))
                 self.log(f"Added script: {custom_name} -> {script_path}")
 
+        self.verbose_log(f"Total discovered scripts: {len(discovered_scripts)}")
         return discovered_scripts
 
     def create_run_yaml(self) -> Path:
@@ -406,7 +431,10 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
             # In non-interactive mode, try to build if Singularity is available
             try:
                 subprocess.run(
-                    ["singularity", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+                    ["singularity", "--version"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=True,
                 )
                 self.log("Singularity detected. Building container automatically...")
                 build_container = True
@@ -445,6 +473,21 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
                 "4. Use SLURM: python submit/submit.py --mode slurm --script <script_name>"
             )
 
+    def rebuild_yaml_only(self):
+        """Rebuild only the run.yaml file by rediscovering scripts."""
+        self.log("Rebuilding run.yaml configuration...")
+        self.log(f"Repository root: {self.repo_root}")
+        self.log(f"Submit directory: {self.submit_dir}")
+
+        # Create run.yaml
+        run_yaml = self.create_run_yaml()
+
+        # Summary
+        self.log("=" * 60)
+        self.log("run.yaml rebuild complete!")
+        self.log(f"Updated: {run_yaml}")
+        self.log("You can now run jobs with your rediscovered scripts.")
+
 
 def main():
     """Main entry point for submit initialization."""
@@ -467,6 +510,16 @@ def main():
         action="store_true",
         help="Overwrite existing configuration files",
     )
+    parser.add_argument(
+        "--run-yaml-only",
+        action="store_true",
+        help="Only rebuild run.yaml file by rediscovering scripts",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable verbose logging for debugging",
+    )
 
     args = parser.parse_args()
 
@@ -475,8 +528,13 @@ def main():
             repo_root=args.repo_root,
             interactive=not args.non_interactive,
             force=args.force,
+            verbose=args.verbose,
         )
-        initializer.run_setup()
+
+        if args.run_yaml_only:
+            initializer.rebuild_yaml_only()
+        else:
+            initializer.run_setup()
     except FileNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)
