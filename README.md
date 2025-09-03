@@ -2,7 +2,68 @@
 
 A lightweight job submission tool that supports both local execution and SLURM cluster submissions. It uses Jinja2 templates and YAML configuration to manage job parameters and execution.
 
-## Cloud setup tutorial
+## Quick Setup (Recommended)
+
+For automated setup in your Python repository:
+
+1. **Clone submit into your project:**
+```bash
+git clone <submit-repo-url> submit/
+```
+
+2. **Run automated setup:**
+```bash
+python -m submit.init
+```
+
+3. **Build container (if prompted or manually):**
+```bash
+./build_container.sh  # Run in SLURM interactive session for cloud usage
+```
+
+### Expected Folder Structure
+
+**Before setup:**
+```
+your-project/
+├── submit/                 # Cloned submit repository
+│   ├── submit.py
+│   ├── init.py
+│   ├── templates/
+│   └── examples/          # Example configuration files
+│       ├── run.yaml
+│       └── Singularity.def
+├── scripts/                # Your Python scripts (optional)
+│   ├── train.py
+│   └── evaluate.py
+├── pyproject.toml         # Or setup.py, requirements.txt
+└── src/                   # Your source code
+```
+
+**After setup:**
+```
+your-project/
+├── submit/
+│   ├── submit.py
+│   ├── init.py
+│   ├── run.yaml           # Generated configuration
+│   ├── templates/
+│   └── examples/          # Example files (unchanged)
+├── scripts/               # Your scripts (discovered automatically)
+├── Singularity.def        # Generated container definition
+├── build_container.sh     # Generated build script
+├── python.sif            # Built container (after running build script)
+├── logs/                  # Generated logs directory
+└── pyproject.toml
+```
+
+The automated setup will:
+- Discover Python scripts in `**/scripts/*.py` directories
+- Generate container definition based on your `pyproject.toml`/`setup.py`
+- Create run configuration with found scripts
+- Optionally build the Singularity container
+
+## Manual Cloud Setup Tutorial
 
 My current workflow is as follows:
 1. Start by cloning `submit` in your working repository (e.g. `$WORK/repos/my-repo/submit`) 
