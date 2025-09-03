@@ -1,4 +1,5 @@
 """Submit jobs with various arguments to SLURM or to run locally."""
+
 import argparse
 import datetime
 import subprocess
@@ -14,6 +15,7 @@ from jinja2 import Template
 
 class ExecutionMode(Enum):
     """Enumeration of supported job execution modes."""
+
     SLURM = "slurm"
     LOCAL = "local"
     CLOUD_LOCAL = "cloud_local"
@@ -43,12 +45,13 @@ class ExecutionMode(Enum):
 
 class LocalJob:
     """Class for managing and executing jobs locally."""
+
     def __init__(
         self,
         cmd_template: Union[str, Path],
         job_name: str,
         template_vars: Union[dict, None] = None,
-        log_path: Path = Path("logs")
+        log_path: Path = Path("logs"),
     ) -> None:
         """Initialize a local job.
 
@@ -117,6 +120,7 @@ class LocalJob:
 
 class SlurmJob:
     """Class for managing and submitting jobs to SLURM scheduler."""
+
     def __init__(
         self,
         cmd_template: Union[str, Path],
@@ -139,7 +143,11 @@ class SlurmJob:
 
     def _render(self) -> str:
         """Render the SLURM script template with the provided variables."""
-        tpl = Path(self._template).read_text() if isinstance(self._template, Path) else self._template
+        tpl = (
+            Path(self._template).read_text()
+            if isinstance(self._template, Path)
+            else self._template
+        )
         return Template(tpl).render(job_name=self._job_name, **self._vars)
 
     def submit(self) -> None:
@@ -159,8 +167,9 @@ class SlurmJob:
 JOB_OPTIONS = {
     ExecutionMode.LOCAL: LocalJob,
     ExecutionMode.SLURM: SlurmJob,
-    ExecutionMode.CLOUD_LOCAL: LocalJob
+    ExecutionMode.CLOUD_LOCAL: LocalJob,
 }
+
 
 def arg_to_string(val):
     """Turn argument to string without backslash"""
@@ -179,21 +188,21 @@ def main() -> None:
         type=str,
         choices=[m.value for m in ExecutionMode],
         default=ExecutionMode.LOCAL.value,
-        help="Execution mode (e.g. slurm or local)"
+        help="Execution mode (e.g. slurm or local)",
     )
 
     parser.add_argument(
         "--script",
         type=str,
         required=True,
-        help="Which entry under `scripts:` in the YAML to run."
+        help="Which entry under `scripts:` in the YAML to run.",
     )
 
     parser.add_argument(
         "--config_file",
         type=Path,
         default=Path("./submit/run.yaml"),
-        help="YAML config file, containing all run variables."
+        help="YAML config file, containing all run variables.",
     )
 
     # Special slurm arguments
@@ -203,7 +212,12 @@ def main() -> None:
     parser.add_argument("--mem-per-cpu", type=str, help="Memory per CPU (e.g. 4G)")
     parser.add_argument("--gres", type=str, help="Generic resources (e.g. gpu:1)")
     parser.add_argument("--time", type=str, help="Time limit (e.g. 3-00:00:00)")
-    parser.add_argument("--slurm_log_dir", type=str, default="./logs", help="Log directory for slurm job.")
+    parser.add_argument(
+        "--slurm_log_dir",
+        type=str,
+        default="./logs",
+        help="Log directory for slurm job.",
+    )
 
     # Split off any --key value1 value2 ... into `unknown`
     args, unknown = parser.parse_known_args()
@@ -215,12 +229,12 @@ def main() -> None:
     if args.mode == ExecutionMode.SLURM:
         mode_specific_overrides = {
             "partition": args.partition,
-            "nodes": args.nodes, 
+            "nodes": args.nodes,
             "cpus_per_task": args.cpus_per_task,
             "mem_per_cpu": args.mem_per_cpu,
             "gres": args.gres,
             "time_limit": args.time,
-            "slurm_log_dir": args.slurm_log_dir
+            "slurm_log_dir": args.slurm_log_dir,
         }
     else:
         mode_specific_overrides = {}
@@ -240,10 +254,7 @@ def main() -> None:
     default_args = script_cfg.get("default_args", {})
 
     # Combine variables to create job arrays
-    extra_args = {
-        k: v if isinstance(v, list) else [v]
-        for k, v in default_args.items()
-    }
+    extra_args = {k: v if isinstance(v, list) else [v] for k, v in default_args.items()}
     i = 0
     while i < len(unknown):
         tok = unknown[i]
@@ -264,6 +275,18 @@ def main() -> None:
     keys = list(extra_args.keys())
     all_values = [extra_args[k] for k in keys]
 
+    # Show job creation details
+    total_jobs = len(list(product(*all_values)))
+    print(f"Creating {total_jobs} job(s) with the following parameters:")
+    if keys:
+        for key, values in extra_args.items():
+            values_str = ", ".join(str(v) for v in values)
+            print(f"  {key}: [{values_str}]")
+        print()
+    else:
+        print("  (no parameters specified)")
+        print()
+
     for combo in product(*all_values):
         # combo is a tuple like ("value1_for_key1", "value_for_key2", ...)
         combo_dict = dict(zip(keys, combo))
@@ -281,15 +304,17 @@ def main() -> None:
         )
 
         # instantiate and submit
-        suffix = "_".join(f"{arg_to_string(k)}={arg_to_string(v)}" for k,v in combo_dict.items())
+        suffix = "_".join(
+            f"{arg_to_string(k)}={arg_to_string(v)}" for k, v in combo_dict.items()
+        )
         name = args.script if not suffix else f"{args.script}_{suffix}"
 
         job = JOB_OPTIONS[args.mode](
-            cmd_template=template_fp,
-            job_name=name,
-            template_vars=template_vars
+            cmd_template=template_fp, job_name=name, template_vars=template_vars
         )
         job.submit()
+
+    print(f"Submitted {total_jobs} job(s)")
 
 
 if __name__ == "__main__":
