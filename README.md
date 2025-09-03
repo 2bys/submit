@@ -4,7 +4,7 @@ A lightweight job submission tool that supports both local execution and SLURM c
 
 ## Quick Setup (Recommended)
 
-For automated setup in your Python repository:
+For automated setup in your Python repository (on the MLCloud):
 
 1. **Clone submit into your project:**
 ```bash
@@ -13,8 +13,14 @@ git clone <submit-repo-url> submit/
 
 2. **Run automated setup:**
 ```bash
-python -m submit.init
+python3 -m submit.init
 ```
+
+Consider the following additional arguments:
+- `--non-interactive`: setup in yolo mode.
+- `--force`: overwrite existing configuration files.
+- `--run-yaml-only`: only rebuild `run.yaml` file.
+- `--verbose`: enable verbose logging for debugging script discovery issue 
 
 3. **Build container (if prompted or manually):**
 ```bash

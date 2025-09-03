@@ -390,6 +390,10 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
 
     def run_setup(self):
         """Run the complete setup process."""
+        self.log(
+            "⚠️  WARNING: This initialization feature is experimental and "
+            "may change in future versions. Please report any bug."
+        )
         self.log("Starting submit tool initialization...")
         self.log(f"Repository root: {self.repo_root}")
         self.log(f"Submit directory: {self.submit_dir}")
@@ -475,6 +479,9 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
 
     def rebuild_yaml_only(self):
         """Rebuild only the run.yaml file by rediscovering scripts."""
+        self.log(
+            "⚠️  WARNING: This initialization feature is experimental and may change in future versions."
+        )
         self.log("Rebuilding run.yaml configuration...")
         self.log(f"Repository root: {self.repo_root}")
         self.log(f"Submit directory: {self.submit_dir}")
