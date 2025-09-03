@@ -50,6 +50,14 @@ class SubmitInitializer:
                 )
                 raise FileNotFoundError(msg)
 
+    def _is_relative_to(self, path: Path, parent: Path) -> bool:
+        """Python 3.6+ compatible version of Path.is_relative_to()."""
+        try:
+            path.relative_to(parent)
+            return True
+        except ValueError:
+            return False
+
     def log(self, message: str, level: str = "INFO"):
         """Log a message with appropriate formatting."""
         prefix = f"[{level}]" if level != "INFO" else ""
@@ -157,8 +165,8 @@ From: python:{python_version}
         # Look for all scripts directories anywhere in the repo
         scripts_pattern = "**/scripts/*.py"
         for script_file in self.repo_root.glob(scripts_pattern):
-            if script_file.name != "__init__.py" and not script_file.is_relative_to(
-                self.submit_dir
+            if script_file.name != "__init__.py" and not self._is_relative_to(
+                script_file, self.submit_dir
             ):
                 script_name = script_file.stem
                 discovered_scripts.append(
@@ -190,7 +198,7 @@ From: python:{python_version}
                     self.log(f"Not a Python file: {script_path}", "WARNING")
                     continue
 
-                if full_script_path.is_relative_to(self.submit_dir):
+                if self._is_relative_to(full_script_path, self.submit_dir):
                     self.log(
                         f"Skipping file in submit directory: {script_path}", "WARNING"
                     )
