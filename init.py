@@ -285,7 +285,7 @@ From: python:{python_version}
 
         # Write configuration
         with run_yaml_path.open("w") as f:
-            yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+            yaml.dump(config, f, default_flow_style=False)
 
         self.log(f"Created {run_yaml_path}")
         return run_yaml_path
