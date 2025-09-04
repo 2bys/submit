@@ -12,6 +12,14 @@ git clone <submit-repo-url> submit/
 ```
 
 2. **Run automated setup:**
+Start an interactive session with
+
+```bash
+srun --partition=2080-galvani --gres=gpu:1 --pty bash
+```
+
+and then run
+
 ```bash
 python3 -m submit.init
 ```
