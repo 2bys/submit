@@ -495,6 +495,28 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
         self.log(f"Updated: {run_yaml}")
         self.log("You can now run jobs with your rediscovered scripts.")
 
+    def rebuild_singularity_only(self):
+        """Rebuild only the Singularity.def file and build script."""
+        self.log(
+            "⚠️  WARNING: This initialization feature is experimental and may change in future versions."
+        )
+        self.log("Rebuilding Singularity container configuration...")
+        self.log(f"Repository root: {self.repo_root}")
+        self.log(f"Submit directory: {self.submit_dir}")
+
+        # Create Singularity definition
+        singularity_def = self.create_singularity_def()
+
+        # Create build script
+        build_script = self.create_build_script()
+
+        # Summary
+        self.log("=" * 60)
+        self.log("Singularity configuration rebuild complete!")
+        self.log(f"Updated: {singularity_def}")
+        self.log(f"Updated: {build_script}")
+        self.log("You can now build the container with: ./build_container.sh")
+
 
 def main():
     """Main entry point for submit initialization."""
@@ -523,6 +545,11 @@ def main():
         help="Only rebuild run.yaml file by rediscovering scripts",
     )
     parser.add_argument(
+        "--singularity-only",
+        action="store_true",
+        help="Only rebuild Singularity.def container definition and build script",
+    )
+    parser.add_argument(
         "--verbose",
         action="store_true",
         help="Enable verbose logging for debugging",
@@ -540,6 +567,8 @@ def main():
 
         if args.run_yaml_only:
             initializer.rebuild_yaml_only()
+        elif args.singularity_only:
+            initializer.rebuild_singularity_only()
         else:
             initializer.run_setup()
     except FileNotFoundError as e:

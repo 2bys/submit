@@ -28,6 +28,7 @@ Consider the following additional arguments:
 - `--non-interactive`: setup in yolo mode.
 - `--force`: overwrite existing configuration files.
 - `--run-yaml-only`: only rebuild `run.yaml` file.
+- `--singularity-only`: only rebuild `Singularity.def` and `build_container.sh` files.
 - `--verbose`: enable verbose logging for debugging script discovery issue 
 
 3. **Build container (if prompted or manually):**
