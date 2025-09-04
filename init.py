@@ -388,6 +388,36 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
             self.log(f"Error running build script: {e}", "WARNING")
             return False
 
+    def prompt_and_build_container(self):
+        """Prompt user and conditionally build the Singularity container."""
+        build_container = False
+
+        if self.interactive:
+            build_container = self.prompt_yes_no(
+                "Would you like to build the Singularity container now? (Requires Singularity and may take time)",
+                False,
+            )
+        else:
+            # In non-interactive mode, try to build if Singularity is available
+            try:
+                subprocess.run(
+                    ["singularity", "--version"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=True,
+                )
+                self.log("Singularity detected. Building container automatically...")
+                build_container = True
+            except (FileNotFoundError, subprocess.CalledProcessError):
+                self.log(
+                    "Singularity not available. Skipping container build.", "WARNING"
+                )
+                build_container = False
+
+        if build_container:
+            return self.build_container_with_script()
+        return False
+
     def run_setup(self):
         """Run the complete setup process."""
         self.log(
@@ -424,48 +454,20 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
 
         # Container building
         self.log("\n5. Building Singularity container...")
-        build_container = False
-
-        if self.interactive:
-            build_container = self.prompt_yes_no(
-                "Would you like to build the Singularity container now? (Requires Singularity and may take time)",
-                False,
+        success = self.prompt_and_build_container()
+        if success:
+            self.log("\n" + "=" * 60)
+            self.log("Full setup complete! Container is ready to use.")
+            self.log("\nYou can now run jobs with:")
+            self.log(
+                "  - Local: python submit/submit.py --mode local --script <script_name>"
             )
-        else:
-            # In non-interactive mode, try to build if Singularity is available
-            try:
-                subprocess.run(
-                    ["singularity", "--version"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    check=True,
-                )
-                self.log("Singularity detected. Building container automatically...")
-                build_container = True
-            except (FileNotFoundError, subprocess.CalledProcessError):
-                self.log(
-                    "Singularity not available. Skipping container build.", "WARNING"
-                )
-                build_container = False
-
-        if build_container:
-            success = self.build_container_with_script()
-            if success:
-                self.log("\n" + "=" * 60)
-                self.log("Full setup complete! Container is ready to use.")
-                self.log("\nYou can now run jobs with:")
-                self.log(
-                    "  - Local: python submit/submit.py --mode local --script <script_name>"
-                )
-                self.log(
-                    "  - Cloud: python submit/submit.py --mode cloud_local --script <script_name>"
-                )
-                self.log(
-                    "  - SLURM: python submit/submit.py --mode slurm --script <script_name>"
-                )
-            else:
-                self.log("\nContainer build failed. You can build it later with:")
-                self.log("  ./build_container.sh")
+            self.log(
+                "  - Cloud: python submit/submit.py --mode cloud_local --script <script_name>"
+            )
+            self.log(
+                "  - SLURM: python submit/submit.py --mode slurm --script <script_name>"
+            )
         else:
             self.log("\nNext steps:")
             self.log("1. Review and edit Singularity.def if needed")
@@ -515,7 +517,13 @@ echo "You can now run jobs with: python submit/submit.py --mode cloud_local --sc
         self.log("Singularity configuration rebuild complete!")
         self.log(f"Updated: {singularity_def}")
         self.log(f"Updated: {build_script}")
-        self.log("You can now build the container with: ./build_container.sh")
+
+        # Container building
+        success = self.prompt_and_build_container()
+        if success:
+            self.log("\nContainer build complete! Ready to use.")
+        else:
+            self.log("You can build the container later with: ./build_container.sh")
 
 
 def main():
